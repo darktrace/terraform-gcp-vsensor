@@ -17,6 +17,8 @@ Darktrace vSensors perform deep packet inspection and extract meta-data from the
 
 This guide covers the steps necessary to deploy this Quick Start.
 
+This Quick Start can also be deployed using [GCP Infastructure Manager](https://cloud.google.com/infrastructure-manager/docs/overview). See the section below for the IAM roles required by the Infrastructure Manager service account.
+
 ## Architecture Diagram
 
 ![image](./source/architecture-diagram.png)
@@ -73,13 +75,29 @@ The shared HMAC secret key between the osSensor and vSensor is optional for the 
 The following GCP APIs are required for deploying this template:
 
 - Compute Engine
-- Cloud Deployment Manager v2
 - Identity and Access Management (IAM)
 - IAM Service Account Credentials
 - Cloud Resource Manager
 - Cloud Logging
 - Cloud Monitoring
 - Secret Manager
+
+### IAM
+
+The following IAM roles are required by the user or service account that will deploy the Terraform module:
+
+* `roles/compute.instanceAdmin.v1`
+* `roles/compute.networkAdmin`
+* `roles/compute.securityAdmin`
+* `roles/iam.securityAdmin`
+* `roles/iam.serviceAccountAdmin`
+* `roles/iam.serviceAccountUser`
+* `roles/secretmanager.admin`
+* `roles/storage.admin`
+
+If you are deploying using GCP Infrastructure Manager, its service account will also need the `roles/config.agent` role.
+
+Note that these roles are only used to deploy or update the vSensor, not at runtime. The Terraform module will create a service account for the vSensor with the minimum required runtime permissions.
 
 ## Usage
 
@@ -90,6 +108,19 @@ When the module is used to create a new VPC for deploying the vSensors, there ar
 - provide the names of these subnets to the module (input variable `mirrored_subnets`) and run again `terraform apply` which will configure the packet mirroring; this way, the packet mirroring resource will be managed by the terraform module and you can use it to change the packet mirroring filter parameter (`mirrored_protocols`, `mirrored_cidr_ranges`, `mirrored_direction`).
 
 The CIDR range for the subnet that the vSensors will be deployed in, should have enough usable IP addresses for the maximum vSensor instances (see `mig_max_size`) plus one for the Internal passthrough Network Load Balancer. Learn more about how [GCP uses the IP addresses in a subnet](https://cloud.google.com/vpc/docs/subnets#unusable-ip-addresses-in-every-subnet).
+
+### Deploy using GCP Infrastructure Manager
+
+1. Enable the APIs listed above for your GCP Project
+2. Create a Service Account and grant it the roles listed above
+3. In the GCP Console, navigate to Infrastructure Manager and select "Create New Deployment"
+4. Choose a Deployment ID and region.
+5. Select Terraform 1.5.7 or later
+6. Select the service account you created earlier
+7. Select "Git" as the Terraform configuration source
+8. Enter `https://github.com/darktrace/terraform-gcp-vsensor` for the Git repository
+9. Enter `main` as the Git ref. Leave the directory empty. Select Continue.
+10. Fill in the required values according to the table below.
 
 ### Deploy Darktrace vSensor into an existing VPC
 
