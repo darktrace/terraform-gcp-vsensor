@@ -89,6 +89,7 @@ The following IAM roles are required by the user or service account that will de
 * `roles/compute.instanceAdmin.v1`
 * `roles/compute.networkAdmin`
 * `roles/compute.securityAdmin`
+* `roles/iam.roleAdmin`
 * `roles/iam.securityAdmin`
 * `roles/iam.serviceAccountAdmin`
 * `roles/iam.serviceAccountUser`
@@ -217,6 +218,7 @@ No modules.
 | [google_compute_router_nat.vsensor](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router_nat) | resource |
 | [google_compute_subnetwork.vsensor](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork) | resource |
 | [google_compute_subnetwork.vsensor_bastion](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork) | resource |
+| [google_project_iam_custom_role.vsensor_hmac](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_custom_role) | resource |
 | [google_project_iam_member.vsensor](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
 | [google_project_iam_member.vsensor-hmac](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
 | [google_project_iam_member.vsensor_bastion_log](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
@@ -252,6 +254,7 @@ No modules.
 | <a name="input_dt_instance_port"></a> [dt\_instance\_port](#input\_dt\_instance\_port) | Connection port between vSensor and the Darktrace Master instance. | `number` | `443` | no |
 | <a name="input_existing_vpc_name"></a> [existing\_vpc\_name](#input\_existing\_vpc\_name) | The existing VPC network name where the vSensors will be deployed. If `new_vpc_enable = true` this will be ignored. | `string` | `""` | no |
 | <a name="input_ipv6_enable"></a> [ipv6\_enable](#input\_ipv6\_enable) | Enable Dual-Stack IPv6 support to vSensor for allowing packet mirroring from IPv6 enabled hosts/subnets. | `bool` | `false` | no |
+| <a name="input_lb_global_access_enable"></a> [lb\_global\_access\_enable](#input\_lb\_global\_access\_enable) | Enable global access on the vSensor Internal passthrough Network Load Balancer.<br/>  When `false` (default), only osSensors in the **same region** as the deployment can reach the load balancer IP.<br/>  When `true`, osSensors in **any region** can reach the load balancer IP, allowing cross-region (and cross-zone) access.<br/>  Note: enabling cross-region/cross-zone access may incur additional inter-region network egress charges for traffic between the osSensors and the vSensors. | `bool` | `false` | no |
 | <a name="input_mig_instance_type"></a> [mig\_instance\_type](#input\_mig\_instance\_type) | The machine type to use to create the vSensor. Sizing requirements can be found at https://customerportal.darktrace.com/product-guides/main/vsensor-requirements. | `string` | `"e2-standard-2"` | no |
 | <a name="input_mig_max_size"></a> [mig\_max\_size](#input\_mig\_max\_size) | Maximum number of vSensor instances in the Autoscaling group. It is recommended to be set larger than the `mig_min_size` to allow Autoscaling and instance replacement actions to work correctly. | `number` | `3` | no |
 | <a name="input_mig_min_size"></a> [mig\_min\_size](#input\_mig\_min\_size) | Minimum number of vSensor instances in the Autoscaling group. | `number` | `2` | no |

@@ -15,24 +15,12 @@ exec > >(tee -a /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>
 
 trap exittrap EXIT
 
-echo "Starting userdata"
-
-curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
-bash add-google-cloud-ops-agent-repo.sh --also-install
-cat >/etc/google-cloud-ops-agent/config.yaml <<EOF
-${GCP_CLOUD_OPS_TEMPLATE}
-EOF
-
-service google-cloud-ops-agent restart
-echo "Completed Google Cloud Ops Configuration"
-
-#
 echo "Starting installation"
 #Get the update key from the Secret Manager
 update_key=$(gcloud secrets versions access latest --secret=${sm_update_key})
 
 #Install Darktrace vSensor
-bash <(wget -O - https://packages.darktrace.com/install) --updateKey "$update_key"
+bash <(wget -O - https://packages.darktrace.com/install) --updateKey "$update_key" --installTemplate "GCP:TF"
 
 echo "Setting configuration"
 
@@ -46,24 +34,24 @@ set_updatekey.sh "$update_key"
 push_token=$(gcloud secrets versions access latest --secret=${sm_push_token})
 set_pushtoken.sh "$push_token" ${dt_instance_hostname}:${dt_instance_port}
 
-#Allow osSensors to work via load balancer
-set_ossensor_loadbalancer_direct.sh 1
-
 #Configure vSensor for use in ASG
 set_ephemeral.sh 1
-
-#Get and set the ossensor hmac (if provided)
-if [ -n "${sm_ossensor_hmac}" ]; then
-  ossensor_hmac=$(gcloud secrets versions access latest --secret=${sm_ossensor_hmac})
-  set_ossensor_hmac.sh "$ossensor_hmac"
-  set_gcp_lb_ip.sh "${ossensor_lb_ip}"
-fi
 
 if [ -n "${pcap_bucket_name}" ]; then
   set_pcap_gcp_bucket.sh "${pcap_bucket_name}" "${service_account_email}"
 else
   set_pcap_size.sh 0
 fi
+
+#Get and set the ossensor hmac (if provided)
+if [ -n "${sm_ossensor_hmac}" ]; then
+  #Allow osSensors to work via load balancer
+  set_ossensor_loadbalancer_direct.sh 1
+  ossensor_hmac=$(gcloud secrets versions access latest --secret=${sm_ossensor_hmac})
+  set_ossensor_hmac.sh "$ossensor_hmac"
+  set_gcp_lb_ip.sh "${ossensor_lb_ip}"
+fi
+
 
 echo "Completed vSensor configuration at $(date +%T)"
 

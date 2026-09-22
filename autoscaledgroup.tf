@@ -32,16 +32,15 @@ resource "google_compute_instance_template" "vsensor" {
   }
   metadata = {
     startup-script = templatefile("${path.module}/source/startup-script.sh.tftpl", {
-      sm_update_key          = var.sm_update_key
-      sm_push_token          = var.sm_push_token
-      sm_ossensor_hmac       = var.sm_ossensor_hmac
-      dt_instance_hostname   = var.dt_instance_hostname
-      dt_instance_port       = var.dt_instance_port
-      ossensor_lb_ip         = local.lb_ip
-      pcap_bucket_name       = var.retention_time_days == 0 ? "" : google_storage_bucket.vsensor_pcaps[0].name
-      ssh_iap                = var.ssh_iap
-      service_account_email  = google_service_account.vsensor.email
-      GCP_CLOUD_OPS_TEMPLATE = templatefile("${path.module}/source/cloud-ops-template.yaml.tftpl", {})
+      sm_update_key         = var.sm_update_key
+      sm_push_token         = var.sm_push_token
+      sm_ossensor_hmac      = var.sm_ossensor_hmac
+      dt_instance_hostname  = var.dt_instance_hostname
+      dt_instance_port      = var.dt_instance_port
+      ossensor_lb_ip        = local.lb_ip
+      pcap_bucket_name      = var.retention_time_days == 0 ? "" : google_storage_bucket.vsensor_pcaps[0].name
+      ssh_iap               = var.ssh_iap
+      service_account_email = google_service_account.vsensor.email
     })
 
     ssh-keys = var.mig_ssh_user_key
@@ -84,6 +83,12 @@ resource "google_compute_region_instance_group_manager" "vsensor" {
     minimal_action  = "REPLACE"
     max_surge_fixed = local.max_surge_fixed
     min_ready_sec   = 180
+  }
+
+  # Set the default action on failure explicitly. GCP's default is REPAIR, which
+  # is required when an autoscaler targets this MIG.
+  instance_lifecycle_policy {
+    default_action_on_failure = "REPAIR"
   }
 
   auto_healing_policies {

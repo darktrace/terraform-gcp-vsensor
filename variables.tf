@@ -64,6 +64,18 @@ variable "ipv6_enable" {
   default     = false
 }
 
+variable "lb_global_access_enable" {
+  type        = bool
+  description = <<EOT
+  Enable global access on the vSensor Internal passthrough Network Load Balancer.
+  When `false` (default), only osSensors in the **same region** as the deployment can reach the load balancer IP.
+  When `true`, osSensors in **any region** can reach the load balancer IP, allowing cross-region (and cross-zone) access.
+  Note: enabling cross-region/cross-zone access may incur additional inter-region network egress charges for traffic between the osSensors and the vSensors.
+  https://cloud.google.com/load-balancing/docs/internal#global_access
+  EOT
+  default     = false
+}
+
 variable "mig_subnet_cidr" {
   type        = string
   description = "Subnet range that the vSensors will be deployed in (must not overlap with bastion or other subnets in VPC)."

@@ -15,11 +15,33 @@ resource "google_project_iam_member" "vsensor" {
   member  = "serviceAccount:${google_service_account.vsensor.email}"
 }
 
+# The vSensor uses S3-compatible (XML API) access to the PCAP bucket, which
+# requires a Storage HMAC key. At runtime the vSensor lists existing keys and
+# creates one if needed.
+#
+# NOTE: `storage.hmacKeys` permissions are project-scoped in GCP and cannot be
+# bound to a specific bucket or service account.
+resource "google_project_iam_custom_role" "vsensor_hmac" {
+  count = var.retention_time_days == 0 ? 0 : 1
+
+  project = data.google_project.project.project_id
+  # Custom role IDs must be alphanumeric or underscores (no hyphens), so the
+  # deployment id (which may contain hyphens) is sanitised.
+  role_id     = "${replace(local.deployment_id, "-", "_")}_vsensor_hmac"
+  title       = "Darktrace vSensor HMAC Key User"
+  description = "Create/list/get Storage HMAC keys only (no delete or update). Used by the Darktrace vSensor for S3-compatible PCAP bucket access."
+  permissions = [
+    "storage.hmacKeys.create",
+    "storage.hmacKeys.list",
+    "storage.hmacKeys.get",
+  ]
+}
+
 resource "google_project_iam_member" "vsensor-hmac" {
   count = var.retention_time_days == 0 ? 0 : 1
 
-  project = data.google_project.project.number
-  role    = "roles/storage.hmacKeyAdmin"
+  project = data.google_project.project.project_id
+  role    = google_project_iam_custom_role.vsensor_hmac[0].id
   member  = "serviceAccount:${google_service_account.vsensor.email}"
 }
 

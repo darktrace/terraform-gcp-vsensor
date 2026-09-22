@@ -29,7 +29,7 @@ resource "google_compute_forwarding_rule" "vsensor" {
   ip_address             = google_compute_address.vsensor_lb.address
   is_mirroring_collector = true
 
-  allow_global_access = false
+  allow_global_access = var.lb_global_access_enable
 }
 
 resource "google_compute_packet_mirroring" "vsensor" {
